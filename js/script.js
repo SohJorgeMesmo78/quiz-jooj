@@ -150,7 +150,7 @@ const questions = [
   },
   {
     question: "Qual é a cor favorita do Jooj?",
-    options: ["#F5FF36", "#FFB552", "#FFAA00", "#FF7700"],
+    options: ["#FFD800", "#f2ff79", "#FFAA00", "#FF7700"],
     answer: 2,
   },
   {
