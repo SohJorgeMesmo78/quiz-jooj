@@ -373,6 +373,20 @@ function startQuiz() {
   state.playerName = name;
   state.currentQuestion = 0;
 
+  // Remove a pergunta dinâmica anterior (se existir) para evitar duplicação em reinícios
+  const dynamicIdx = questions.findIndex((q) => q.isDynamic === true);
+  if (dynamicIdx !== -1) {
+    questions.splice(dynamicIdx, 1);
+  }
+
+  // Adiciona a pergunta personalizada
+  questions.push({
+    question: "Quem é o melhor amigo do Jorge?",
+    options: ["Ele mesmo", "Jooj", "Naruto Uzumaki", name],
+    answer: 3,
+    isDynamic: true,
+  });
+
   // Embaralhar as perguntas
   shuffleArray(questions);
 
