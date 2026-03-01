@@ -270,6 +270,26 @@ const questions = [
     ],
     answer: 0,
   },
+  {
+    question: "Qual vai ser o nome da minha primeira filha? (Humana)",
+    options: [
+      "Rafaela",
+      "Melissa",
+      "Yasmin",
+      "Ster",
+    ],
+    answer: 0,
+  },
+  {
+    question: "Qual o nome da minha moto?",
+    options: [
+      "Rafaela",
+      "Melissa",
+      "Yasmin",
+      "Ster",
+    ],
+    answer: 0,
+  },
 ];
 
 /* ─────────────────────────────────────────────────────────────────
