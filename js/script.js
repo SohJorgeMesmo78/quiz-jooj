@@ -673,11 +673,14 @@ function shuffleOptions(options) {
 function updateResultImage(score) {
   const img = document.getElementById("result-img");
 
-  if (score <= 5) {
+  const total = questions.length;
+  const pct = score / total;
+
+  if (pct <= 0.33) {
     img.src = "assets/03.png";
-  } else if (score <= 10) {
+  } else if (pct <= 0.6) {
     img.src = "assets/06.png";
-  } else if (score <= 15) {
+  } else if (pct <= 0.86) {
     img.src = "assets/08.png";
   } else {
     img.src = "assets/10.png";
