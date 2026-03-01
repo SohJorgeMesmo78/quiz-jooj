@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quem Conhece Melhor o Jooj?</title>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       FIREBASE CDN — SDK modular (compat para facilitar configuração)
+       ═══════════════════════════════════════════════════════════════ -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       ESTILOS GLOBAIS
+       ═══════════════════════════════════════════════════════════════ -->
+  <style>
+    /* ── Variáveis de cor ── */
+    :root {
+      --gold: #FFAA00;
+      --gold-light: #FFD060;
+      --gold-dark: #CC7700;
+      --orange: #FF6600;
+      --orange-dark: #CC4400;
+      --bg: #0A0A0A;
+      --bg-card: #111111;
+      --bg-card2: #1A1400;
+      --text: #F5F5F5;
+      --text-muted: #999999;
+      --glow: 0 0 18px #FFAA0088, 0 0 40px #FF660044;
+      --glow-strong: 0 0 28px #FFAA00CC, 0 0 60px #FF660066;
+      --radius: 14px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Reset ── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── Fundo animado com partículas de brilho ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, #FFAA0015 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 90%, #FF660012 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Container principal ── */
+    #app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* ── Telas ── */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+      animation: fadeSlideIn 0.45s ease both;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* ── Card base ── */
+    .card {
+      background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-card2) 100%);
+      border: 1px solid #FFAA0030;
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      box-shadow: 0 4px 40px #00000088, inset 0 1px 0 #FFAA0020;
+    }
+
+    /* ── Tipografia ── */
+    h1 {
+      font-size: clamp(1.8rem, 6vw, 2.8rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.15;
+      text-align: center;
+      letter-spacing: -0.5px;
+    }
+
+    h2 {
+      font-size: clamp(1.2rem, 4vw, 1.6rem);
+      font-weight: 700;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      text-align: center;
+      font-size: 1rem;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    /* ── Botões ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      transition: var(--transition);
+      text-decoration: none;
+      outline: none;
+      user-select: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--orange));
+      color: #000;
+      padding: 14px 36px;
+      box-shadow: var(--glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: var(--glow-strong);
+      filter: brightness(1.1);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--gold);
+      border: 1.5px solid var(--gold-dark);
+      padding: 11px 28px;
+      font-size: 0.9rem;
+    }
+
+    .btn-secondary:hover {
+      background: #FFAA0015;
+      border-color: var(--gold);
+      box-shadow: 0 0 12px #FFAA0044;
+      transform: translateY(-1px);
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* ── Input ── */
+    .input-group {
+      margin: 28px 0;
+      position: relative;
+    }
+
+    .input-group input {
+      width: 100%;
+      background: #1A1A1A;
+      border: 1.5px solid #FFAA0040;
+      border-radius: 50px;
+      padding: 14px 22px;
+      color: var(--text);
+      font-size: 1.05rem;
+      outline: none;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .input-group input::placeholder {
+      color: #666;
+    }
+
+    .input-group input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px #FFAA0025, var(--glow);
+    }
+
+    /* ── Separador ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #FFAA0040, transparent);
+      margin: 24px 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TELA INICIAL
+       ═══════════════════════════════════════════════════════════════ */
+    #screen-home .emoji-crown {
+      font-size: 3.5rem;
+      text-align: center;
+      display: block;
+      margin-bottom: 16px;
+      animation: pulse-glow 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 8px #FFAA00AA);
+        transform: scale(1);
+      }
+
+      50% {
+        filter: drop-shadow(0 0 22px #FFD060CC);
+        transform: scale(1.06);
+      }
+    }
+
+    #screen-home .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 32px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TELA DO QUIZ
+       ═══════════════════════════════════════════════════════════════ */
+    .progress-bar-wrap {
+      background: #1A1A1A;
+      border-radius: 50px;
+      height: 6px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold-light), var(--orange));
+      border-radius: 50px;
+      transition: width 0.5s ease;
+      box-shadow: 0 0 8px var(--gold);
+    }
+
+    .question-counter {
+      font-size: 0.85rem;
+      color: var(--gold);
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .question-text {
+      font-size: clamp(1.05rem, 3.5vw, 1.25rem);
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+      line-height: 1.55;
+      margin-bottom: 28px;
+      min-height: 60px;
+    }
+
+    /* ── Opções ── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 400px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .option-btn {
+      background: #161616;
+      border: 1.5px solid #FFAA0030;
+      border-radius: var(--radius);
+      padding: 14px 12px;
+      color: var(--text);
+      font-size: 0.93rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+      line-height: 1.4;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .option-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--gold-light), var(--orange));
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .option-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--gold);
+      box-shadow: 0 0 14px #FFAA0044;
+      transform: translateY(-2px);
+    }
+
+    .option-btn:hover:not(:disabled)::before {
+      opacity: 0.08;
+    }
+
+    .option-btn.selected {
+      border-color: var(--gold);
+      background: #1E1600;
+      box-shadow: 0 0 16px #FFAA0055;
+      color: var(--gold-light);
+      font-weight: 700;
+    }
+
+    .option-btn.selected::before {
+      opacity: 0.12;
+    }
+
+    /* Feedback correto / incorreto */
+    .option-btn.correct {
+      border-color: #44DD88 !important;
+      background: #002210 !important;
+      box-shadow: 0 0 18px #44DD8866 !important;
+      color: #44DD88 !important;
+      animation: pop 0.35s ease;
+    }
+
+    .option-btn.incorrect {
+      border-color: #FF4444 !important;
+      background: #1A0000 !important;
+      box-shadow: 0 0 18px #FF444466 !important;
+      color: #FF6666 !important;
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes pop {
+      0% {
+        transform: scale(1);
+      }
+
+      40% {
+        transform: scale(1.06);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-6px);
+      }
+
+      40% {
+        transform: translateX(6px);
+      }
+
+      60% {
+        transform: translateX(-4px);
+      }
+
+      80% {
+        transform: translateX(4px);
+      }
+    }
+
+    /* ── Navegação ── */
+    .quiz-nav {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .quiz-nav .btn {
+      flex: 1;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TELA DE RESULTADO
+       ═══════════════════════════════════════════════════════════════ */
+    .result-score {
+      font-size: clamp(3rem, 12vw, 5rem);
+      font-weight: 900;
+      text-align: center;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin: 16px 0;
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .result-player {
+      text-align: center;
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .result-player strong {
+      color: var(--gold);
+    }
+
+    .result-message {
+      background: #1A1400;
+      border: 1px solid #FFAA0030;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      text-align: center;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin: 20px 0;
+      font-style: italic;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RANKING (compartilhado entre resultado e tela de ranking)
+       ═══════════════════════════════════════════════════════════════ */
+    .ranking-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .ranking-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #161616;
+      border: 1px solid #FFAA0020;
+      border-radius: 10px;
+      padding: 12px 16px;
+      transition: var(--transition);
+    }
+
+    .ranking-item:hover {
+      border-color: #FFAA0050;
+      background: #1A1400;
+    }
+
+    .ranking-item.first-place {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, #1E1600, #0A0A00);
+      box-shadow: 0 0 20px #FFAA0033;
+    }
+
+    .rank-pos {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--text-muted);
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .ranking-item.first-place .rank-pos {
+      font-size: 1.4rem;
+    }
+
+    .rank-name {
+      flex: 1;
+      font-weight: 600;
+      font-size: 0.97rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ranking-item.first-place .rank-name {
+      color: var(--gold-light);
+    }
+
+    .rank-score {
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+
+    .ranking-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      padding: 24px 0;
+    }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #FFAA0040;
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── Toast de notificação ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1A1400;
+      border: 1px solid var(--gold);
+      border-radius: 50px;
+      padding: 12px 24px;
+      color: var(--gold-light);
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: var(--glow);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 9999;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Responsividade ── */
+    @media (max-width: 480px) {
+      .card {
+        padding: 28px 20px;
+      }
+
+      .quiz-nav {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ═══════════════════════════════════════════════════════════════
+       ESTRUTURA HTML
+       ═══════════════════════════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- ── 1. TELA INICIAL ── -->
+    <section id="screen-home" class="screen active">
+      <div class="card">
+        <span class="emoji-crown">👑</span>
+        <h1>Quem Conhece Melhor o Jooj?</h1>
+        <p class="subtitle">
+          Chegou a hora da verdade! Prove que você é o maior especialista em Jooj
+          e dispute o topo do ranking. Você tem coragem? 🔥
+        </p>
+        <div class="divider"></div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-full" onclick="goToScreen('screen-name')">
+            🚀 Começar Quiz
+          </button>
+          <button class="btn btn-secondary btn-full" onclick="openRanking()">
+            🏆 Ver Ranking
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 2. TELA DE NOME ── -->
+    <section id="screen-name" class="screen">
+      <div class="card">
+        <h2>Como você se chama?</h2>
+        <p class="subtitle">Seu nome vai aparecer no ranking. Escolha bem! 😏</p>
+        <div class="input-group">
+          <input type="text" id="player-name-input" placeholder="Digite seu nome aqui..." maxlength="30"
+            autocomplete="off" onkeydown="if(event.key==='Enter') startQuiz()" />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="startQuiz()">
+          ⚡ Iniciar
+        </button>
+        <div class="divider"></div>
+        <button class="btn btn-secondary btn-full" onclick="goToScreen('screen-home')">
+          ← Voltar
+        </button>
+      </div>
+    </section>
+
+    <!-- ── 3. TELA DO QUIZ ── -->
+    <section id="screen-quiz" class="screen">
+      <div class="card">
+        <!-- Barra de progresso -->
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+
+        <!-- Contador -->
+        <div class="question-counter" id="question-counter">1 / 15</div>
+
+        <!-- Pergunta -->
+        <div class="question-text" id="question-text">Carregando...</div>
+
+        <!-- Opções -->
+        <div class="options-grid" id="options-grid">
+          <!-- Preenchido via JS -->
+        </div>
+
+        <!-- Navegação -->
+        <div class="quiz-nav">
+          <button class="btn btn-secondary" id="btn-prev" onclick="prevQuestion()">
+            ← Anterior
+          </button>
+          <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">
+            Próxima →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 4. TELA DE RESULTADO ── -->
+    <section id="screen-result" class="screen">
+      <div class="card">
+        <p class="result-player">Resultado de <strong id="result-name">—</strong></p>
+        <div class="result-score" id="result-score">0 / 15</div>
+        <div class="result-message" id="result-message">—</div>
+
+        <div class="result-actions">
+          <button class="btn btn-primary btn-full" onclick="newParticipant()">
+            👤 Novo Participante
+          </button>
+          <button class="btn btn-secondary btn-full" onclick="openRanking()">
+            🏆 Ver Ranking
+          </button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="ranking-title">🏅 Ranking Atual</div>
+        <ul class="ranking-list" id="result-ranking-list">
+          <li class="ranking-empty"><span class="spinner"></span> Carregando...</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── 5. TELA DE RANKING ── -->
+    <section id="screen-ranking" class="screen">
+      <div class="card">
+        <h2>🏆 Ranking Geral</h2>
+        <p class="subtitle">Os maiores especialistas em Jooj de todos os tempos!</p>
+        <div class="divider"></div>
+        <ul class="ranking-list" id="full-ranking-list">
+          <li class="ranking-empty"><span class="spinner"></span> Carregando...</li>
+        </ul>
+        <div class="divider"></div>
+        <button class="btn btn-secondary btn-full" onclick="goToScreen('screen-home')">
+          ← Voltar ao Início
+        </button>
+      </div>
+    </section>
+
+  </div><!-- /#app -->
+
+  <!-- Toast de notificação -->
+  <div id="toast"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       LÓGICA JAVASCRIPT
+       ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    'use strict';
+
+    /* ─────────────────────────────────────────────────────────────────
+       CONFIGURAÇÃO DO FIREBASE
+       Cole sua configuração do Firebase abaixo para ativar o banco de
+       dados em tempo real. Se deixar vazio, o quiz usará localStorage.
+    ───────────────────────────────────────────────────────────────── */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAR1TFbeAIwNV4cGyp0LzfqRaJSK1mWsyQ",
+      authDomain: "quiz-jooj-aniversario.firebaseapp.com",
+      databaseURL: "https://quiz-jooj-aniversario-default-rtdb.firebaseio.com/",
+      projectId: "quiz-jooj-aniversario",
+      storageBucket: "quiz-jooj-aniversario.firebasestorage.app",
+      messagingSenderId: "200152011682",
+      appId: "1:200152011682:web:2ea19a2e111d5f61a1d8fb"
+    };
+
+    /* ─────────────────────────────────────────────────────────────────
+       INICIALIZAÇÃO DO FIREBASE (com fallback automático)
+    ───────────────────────────────────────────────────────────────── */
+    let db = null;
+    let useFirebase = false;
+
+    (function initFirebase() {
+      try {
+        if (firebaseConfig.apiKey && firebaseConfig.databaseURL) {
+          firebase.initializeApp(firebaseConfig);
+          db = firebase.database();
+          useFirebase = true;
+          console.log('[Quiz] Firebase conectado com sucesso.');
+        } else {
+          console.log('[Quiz] Firebase não configurado. Usando localStorage como fallback.');
+        }
+      } catch (e) {
+        console.warn('[Quiz] Erro ao inicializar Firebase:', e.message, '— usando localStorage.');
+      }
+    })();
+
+    /* ─────────────────────────────────────────────────────────────────
+       BANCO DE DADOS — FUNÇÕES PRINCIPAIS
+    ───────────────────────────────────────────────────────────────── */
+
+    /**
+     * Salva a pontuação de um jogador.
+     * @param {string} name  - Nome do jogador
+     * @param {number} score - Pontuação obtida
+     * @returns {Promise<void>}
+     */
+    async function saveScore(name, score) {
+      const entry = {
+        name: name.trim(),
+        score: score,
+        timestamp: Date.now()
+      };
+
+      if (useFirebase) {
+  const ref = db.ref('ranking').push(entry);
+  console.log('[DEBUG] Firebase push ref:', ref.toString());
+} 
+
+      console.log('[DEBUG] Salvando pontuação:', entry); // <- aqui
+      if (useFirebase) {
+        // Firebase: salva como novo registro na lista "ranking"
+        await db.ref('ranking').push(entry);
+      } else {
+        // localStorage fallback
+        const data = getLocalRanking();
+        data.push(entry);
+        console.log('[DEBUG] Ranking local atualizado:', data); // <- e aqui
+        localStorage.setItem('quiz_jooj_ranking', JSON.stringify(data));
+      }
+    }
+
+    /**
+     * Carrega e retorna o ranking ordenado (maior pontuação primeiro;
+     * em caso de empate, quem terminou antes fica na frente).
+     * @returns {Promise<Array<{name, score, timestamp}>>}
+     */
+    async function loadRanking() {
+      let entries = [];
+
+      if (useFirebase) {
+        const snap = await db.ref('ranking').orderByChild('score').once('value');
+        snap.forEach(child => entries.push(child.val()));
+      } else {
+        entries = getLocalRanking();
+      }
+
+      // Ordena: maior score primeiro; empate → menor timestamp primeiro
+      entries.sort((a, b) =>
+        b.score !== a.score
+          ? b.score - a.score
+          : a.timestamp - b.timestamp
+      );
+
+      console.log('[DEBUG] Ranking carregado e ordenado:', entries); // <- aqui
+
+      return entries;
+    }
+
+    /** Lê o ranking do localStorage */
+    function getLocalRanking() {
+      try {
+        return JSON.parse(localStorage.getItem('quiz_jooj_ranking') || '[]');
+      } catch { return []; }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       PERGUNTAS DO QUIZ
+       Estrutura: { question, options: [string x4], answer: índice 0-3 }
+    ───────────────────────────────────────────────────────────────── */
+    const questions = [
+      {
+        question: "Qual é o verdadeiro nome do Jooj?",
+        options: ["Jorge Henrique", "João Pedro", "José Eduardo", "Joaquim Neto"],
+        answer: 0
+      },
+      {
+        question: "Qual é a cor favorita do Jooj?",
+        options: ["Azul", "Verde", "Amarelo", "Vermelho"],
+        answer: 2
+      },
+      {
+        question: "Qual comida o Jooj não consegue viver sem?",
+        options: ["Pizza", "Sushi", "Churrasco", "Hambúrguer"],
+        answer: 3
+      },
+      {
+        question: "Qual é o hobby favorito do Jooj nas horas vagas?",
+        options: ["Jogar videogame", "Ler livros", "Tocar guitarra", "Assistir séries"],
+        answer: 0
+      },
+      {
+        question: "Qual é o animal que o Jooj mais gosta?",
+        options: ["Cachorro", "Gato", "Leão", "Lobo"],
+        answer: 0
+      },
+      {
+        question: "Qual série o Jooj assistiu mais vezes?",
+        options: ["Breaking Bad", "The Office", "Narcos", "Dark"],
+        answer: 1
+      },
+      {
+        question: "Qual é o estilo musical preferido do Jooj?",
+        options: ["Sertanejo", "Funk", "Rock", "Pop"],
+        answer: 2
+      },
+      {
+        question: "Em qual mês o Jooj faz aniversário?",
+        options: ["Janeiro", "Março", "Julho", "Outubro"],
+        answer: 2
+      },
+      {
+        question: "Qual é o maior medo do Jooj?",
+        options: ["Altura", "Barata", "Escuro", "Agulha"],
+        answer: 1
+      },
+      {
+        question: "Qual é a frase que o Jooj mais repete?",
+        options: [
+          "Que isso, mano!",
+          "Tá bom demais!",
+          "Não acredito!",
+          "Sério mesmo?"
+        ],
+        answer: 1
+      },
+      {
+        question: "Qual é o esporte favorito do Jooj?",
+        options: ["Futebol", "Basquete", "Vôlei", "Tênis"],
+        answer: 0
+      },
+      {
+        question: "Qual plataforma o Jooj usa mais no celular?",
+        options: ["Twitter/X", "TikTok", "Instagram", "YouTube"],
+        answer: 2
+      },
+      {
+        question: "Qual é o sonho de viagem do Jooj?",
+        options: ["Japão", "Nova York", "Paris", "Dubai"],
+        answer: 0
+      },
+      {
+        question: "Qual é a bebida favorita do Jooj?",
+        options: ["Café", "Refrigerante", "Suco de laranja", "Água com gás"],
+        answer: 0
+      },
+      {
+        question: "O que o Jooj faz primeiro quando acorda?",
+        options: [
+          "Olha o celular",
+          "Toma café",
+          "Vai ao banheiro",
+          "Faz alongamento"
+        ],
+        answer: 0
+      }
+    ];
+
+    /* ─────────────────────────────────────────────────────────────────
+       ESTADO DO QUIZ
+    ───────────────────────────────────────────────────────────────── */
+    const state = {
+      playerName: '',
+      currentQuestion: 0,
+      answers: new Array(questions.length).fill(null), // índice da opção escolhida
+      feedbackShown: false // se o feedback já foi exibido na questão atual
+    };
+
+    /* ─────────────────────────────────────────────────────────────────
+       NAVEGAÇÃO ENTRE TELAS
+    ───────────────────────────────────────────────────────────────── */
+    function goToScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(id);
+      target.classList.add('active');
+      // Reinicia animação
+      target.style.animation = 'none';
+      target.offsetHeight; // reflow
+      target.style.animation = '';
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       TELA DE NOME → iniciar quiz
+    ───────────────────────────────────────────────────────────────── */
+    function startQuiz() {
+      const input = document.getElementById('player-name-input');
+      const name = input.value.trim();
+
+      if (!name) {
+        input.focus();
+        input.style.borderColor = '#FF4444';
+        input.style.boxShadow = '0 0 0 3px #FF444425';
+        showToast('⚠️ Digite seu nome para continuar!');
+        setTimeout(() => {
+          input.style.borderColor = '';
+          input.style.boxShadow = '';
+        }, 1800);
+        return;
+      }
+
+      // Reseta estado
+      state.playerName = name;
+      state.currentQuestion = 0;
+      state.answers = new Array(questions.length).fill(null);
+      state.feedbackShown = false;
+
+      goToScreen('screen-quiz');
+      renderQuestion();
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       RENDERIZAÇÃO DA PERGUNTA
+    ───────────────────────────────────────────────────────────────── */
+    function renderQuestion() {
+      const idx = state.currentQuestion;
+      const q = questions[idx];
+      const total = questions.length;
+
+      // Progresso
+      document.getElementById('progress-fill').style.width =
+        `${((idx + 1) / total) * 100}%`;
+      document.getElementById('question-counter').textContent =
+        `${idx + 1} / ${total}`;
+
+      // Texto da pergunta
+      document.getElementById('question-text').textContent = q.question;
+
+      // Opções
+      const grid = document.getElementById('options-grid');
+      grid.innerHTML = '';
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span>${opt}</span>`;
+        btn.onclick = () => selectOption(i);
+
+        // Restaura seleção anterior
+        if (state.answers[idx] !== null) {
+          btn.disabled = true;
+          if (i === state.answers[idx]) {
+            btn.classList.add(i === q.answer ? 'correct' : 'incorrect');
+          } else if (i === q.answer) {
+            btn.classList.add('correct'); // mostra a certa
+          }
+        }
+
+        grid.appendChild(btn);
+      });
+
+      // Botão anterior
+      document.getElementById('btn-prev').disabled = (idx === 0);
+
+      // Botão próxima / finalizar
+      const btnNext = document.getElementById('btn-next');
+      btnNext.textContent = (idx === total - 1) ? '✅ Finalizar' : 'Próxima →';
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SELECIONAR OPÇÃO
+    ───────────────────────────────────────────────────────────────── */
+    function selectOption(selectedIdx) {
+      const idx = state.currentQuestion;
+      const q = questions[idx];
+
+      // Ignora se já respondeu
+      if (state.answers[idx] !== null) return;
+
+      state.answers[idx] = selectedIdx;
+
+      // Aplica feedback visual
+      const btns = document.querySelectorAll('.option-btn');
+      btns.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === selectedIdx) {
+          btn.classList.add(selectedIdx === q.answer ? 'correct' : 'incorrect');
+        } else if (i === q.answer) {
+          btn.classList.add('correct'); // revela a correta
+        }
+      });
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       NAVEGAÇÃO ENTRE PERGUNTAS
+    ───────────────────────────────────────────────────────────────── */
+    function nextQuestion() {
+      const idx = state.currentQuestion;
+
+      // Impede avançar sem selecionar
+      if (state.answers[idx] === null) {
+        showToast('⚠️ Selecione uma resposta antes de continuar!');
+        // Anima o grid para chamar atenção
+        const grid = document.getElementById('options-grid');
+        grid.style.animation = 'none';
+        grid.offsetHeight;
+        grid.style.animation = 'shake 0.4s ease';
+        return;
+      }
+
+      if (idx < questions.length - 1) {
+        state.currentQuestion++;
+        renderQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function prevQuestion() {
+      if (state.currentQuestion > 0) {
+        state.currentQuestion--;
+        renderQuestion();
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       FINALIZAR QUIZ
+    ───────────────────────────────────────────────────────────────── */
+    async function finishQuiz() {
+      // Calcula pontuação
+      const score = state.answers.reduce((acc, ans, i) =>
+        acc + (ans === questions[i].answer ? 1 : 0), 0
+      );
+
+      // Salva no banco
+      try {
+        await saveScore(state.playerName, score);
+      } catch (e) {
+        console.error('[Quiz] Erro ao salvar pontuação:', e);
+      }
+
+      // Exibe resultado
+      document.getElementById('result-name').textContent = state.playerName;
+      document.getElementById('result-score').textContent = `${score} / ${questions.length}`;
+      document.getElementById('result-message').textContent = getResultMessage(score);
+
+      goToScreen('screen-result');
+      renderRankingInto('result-ranking-list');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       MENSAGEM DINÂMICA DE RESULTADO
+    ───────────────────────────────────────────────────────────────── */
+    function getResultMessage(score) {
+      const total = questions.length;
+      const pct = score / total;
+
+      if (pct <= 0.33) {
+        return `Hmm... ${score} ponto(s)? Parece que você conhece o Jooj menos do que o vizinho dele! 😅 Tenta de novo e estuda mais!`;
+      } else if (pct <= 0.60) {
+        return `${score} pontos! Você conhece o Jooj razoavelmente bem, mas ainda tem muito a descobrir. Quase lá! 🤔`;
+      } else if (pct <= 0.86) {
+        return `Uau! ${score} pontos! Você é praticamente um especialista em Jooj. Impressionante! 🔥`;
+      } else {
+        return `🏆 LENDÁRIO! ${score} de ${total}! Você conhece o Jooj melhor do que ele mesmo! Merece o trono! 👑`;
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       RENDERIZAÇÃO DO RANKING
+    ───────────────────────────────────────────────────────────────── */
+    async function renderRankingInto(listId) {
+      const list = document.getElementById(listId);
+      list.innerHTML = '<li class="ranking-empty"><span class="spinner"></span> Carregando...</li>';
+
+      try {
+        const entries = await loadRanking();
+
+        if (!entries.length) {
+          list.innerHTML = '<li class="ranking-empty">Nenhuma pontuação registrada ainda. Seja o primeiro! 🚀</li>';
+          return;
+        }
+
+        list.innerHTML = '';
+        entries.forEach((entry, i) => {
+          const li = document.createElement('li');
+          li.className = `ranking-item${i === 0 ? ' first-place' : ''}`;
+
+          const pos = i === 0 ? '👑' : `#${i + 1}`;
+          li.innerHTML = `
+          <span class="rank-pos">${pos}</span>
+          <span class="rank-name">${escapeHTML(entry.name)}</span>
+          <span class="rank-score">${entry.score} / ${questions.length}</span>
+        `;
+          list.appendChild(li);
+        });
+      } catch (e) {
+        list.innerHTML = '<li class="ranking-empty">Erro ao carregar ranking. Tente novamente.</li>';
+        console.error('[Quiz] Erro ao carregar ranking:', e);
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       TELA DE RANKING SEPARADA
+    ───────────────────────────────────────────────────────────────── */
+    function openRanking() {
+      goToScreen('screen-ranking');
+      renderRankingInto('full-ranking-list');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       NOVO PARTICIPANTE
+    ───────────────────────────────────────────────────────────────── */
+    function newParticipant() {
+      document.getElementById('player-name-input').value = '';
+      goToScreen('screen-name');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       UTILITÁRIOS
+    ───────────────────────────────────────────────────────────────── */
+
+    /** Exibe um toast de notificação temporário */
+    function showToast(msg, duration = 2400) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    /** Escapa HTML para evitar XSS */
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+  </script>
+</body>
+
+</html>
