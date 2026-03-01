@@ -794,28 +794,30 @@
      * @param {number} score - Pontuação obtida
      * @returns {Promise<void>}
      */
-    async function saveScore(name, score) {
+    async function saveScore(name, score, duration) {
       const entry = {
         name: name.trim(),
         score: score,
-        timestamp: Date.now()
+        timestamp: duration
       };
 
-      if (useFirebase) {
-  const ref = db.ref('ranking').push(entry);
-  console.log('[DEBUG] Firebase push ref:', ref.toString());
-} 
+      console.log('[DEBUG] Tentando salvar pontuação:', entry);
 
-      console.log('[DEBUG] Salvando pontuação:', entry); // <- aqui
       if (useFirebase) {
-        // Firebase: salva como novo registro na lista "ranking"
-        await db.ref('ranking').push(entry);
+        try {
+          const ref = db.ref('ranking').push();
+          console.log('[DEBUG] Firebase push ref criado:', ref.toString());
+          await ref.set(entry);
+          console.log('[DEBUG] Firebase entry salva com sucesso!');
+        } catch (e) {
+          console.error('[DEBUG] Erro ao salvar no Firebase:', e);
+        }
       } else {
         // localStorage fallback
         const data = getLocalRanking();
         data.push(entry);
-        console.log('[DEBUG] Ranking local atualizado:', data); // <- e aqui
         localStorage.setItem('quiz_jooj_ranking', JSON.stringify(data));
+        console.log('[DEBUG] Ranking local atualizado:', data);
       }
     }
 
@@ -824,24 +826,34 @@
      * em caso de empate, quem terminou antes fica na frente).
      * @returns {Promise<Array<{name, score, timestamp}>>}
      */
+
+
     async function loadRanking() {
       let entries = [];
+      console.log('[DEBUG] Carregando ranking...');
 
       if (useFirebase) {
-        const snap = await db.ref('ranking').orderByChild('score').once('value');
-        snap.forEach(child => entries.push(child.val()));
+        try {
+          const snap = await db.ref('ranking').once('value');
+          console.log('[DEBUG] Snapshot do Firebase recebido:', snap.val());
+
+          snap.forEach(child => {
+            const val = child.val();
+            console.log('[DEBUG] Lendo child:', child.key, val);
+            entries.push(val);
+          });
+
+        } catch (e) {
+          console.error('[DEBUG] Erro ao ler ranking do Firebase:', e);
+        }
       } else {
         entries = getLocalRanking();
+        console.log('[DEBUG] Ranking local carregado:', entries);
       }
 
       // Ordena: maior score primeiro; empate → menor timestamp primeiro
-      entries.sort((a, b) =>
-        b.score !== a.score
-          ? b.score - a.score
-          : a.timestamp - b.timestamp
-      );
-
-      console.log('[DEBUG] Ranking carregado e ordenado:', entries); // <- aqui
+      entries.sort((a, b) => b.score - a.score || a.timestamp - b.timestamp);
+      console.log('[DEBUG] Ranking ordenado:', entries);
 
       return entries;
     }
@@ -859,69 +871,54 @@
     ───────────────────────────────────────────────────────────────── */
     const questions = [
       {
-        question: "Qual é o verdadeiro nome do Jooj?",
-        options: ["Jorge Henrique", "João Pedro", "José Eduardo", "Joaquim Neto"],
+        question: "Qual é o nome completo do Jooj?",
+        options: ["Jorge Fernando Alves Pereira", "Jorge Fernando Alvares Pereira", "Jorge Fernando Pereira Alvares", "Nicolas Neto"],
         answer: 0
+      },
+      {
+        question: "Qual o dia do aniversário do Jooj?",
+        options: ["03", "02", "05", "04"],
+        answer: 0
+      },
+      {
+        question: "Quantos anos o Jooj vai fazer?",
+        options: ["25", "26", "24", "Todas as opções"],
+        answer: 1
       },
       {
         question: "Qual é a cor favorita do Jooj?",
-        options: ["Azul", "Verde", "Amarelo", "Vermelho"],
+        options: ["#F5FF36", "#FFB552", "#FFAA00", "#FF7700"],
         answer: 2
       },
       {
-        question: "Qual comida o Jooj não consegue viver sem?",
-        options: ["Pizza", "Sushi", "Churrasco", "Hambúrguer"],
+        question: "Qual a comida favorita do Jooj?",
+        options: ["Pizza", "Churrasco", "Hambúrguer", "Comida Japonesa"],
         answer: 3
       },
       {
-        question: "Qual é o hobby favorito do Jooj nas horas vagas?",
-        options: ["Jogar videogame", "Ler livros", "Tocar guitarra", "Assistir séries"],
+        question: "Quantas vezes os pais do Jooj já se separaram? (Contando tanto as que foram no cartório quanto as que não foram)",
+        options: ["13", "9", "0", "7"],
         answer: 0
       },
       {
-        question: "Qual é o animal que o Jooj mais gosta?",
-        options: ["Cachorro", "Gato", "Leão", "Lobo"],
-        answer: 0
-      },
-      {
-        question: "Qual série o Jooj assistiu mais vezes?",
-        options: ["Breaking Bad", "The Office", "Narcos", "Dark"],
+        question: "Quantas vezes o Jooj já fez a Mari fazer xixi no chão da cozinha de tanto rir?",
+        options: ["3", "2", "que?", "nenhuma... quem faz xixi de tanto rir?"],
         answer: 1
       },
       {
         question: "Qual é o estilo musical preferido do Jooj?",
-        options: ["Sertanejo", "Funk", "Rock", "Pop"],
-        answer: 2
-      },
-      {
-        question: "Em qual mês o Jooj faz aniversário?",
-        options: ["Janeiro", "Março", "Julho", "Outubro"],
+        options: ["Sertanejo", "Rock", "Rap", "Pop"],
         answer: 2
       },
       {
         question: "Qual é o maior medo do Jooj?",
-        options: ["Altura", "Barata", "Escuro", "Agulha"],
-        answer: 1
-      },
-      {
-        question: "Qual é a frase que o Jooj mais repete?",
-        options: [
-          "Que isso, mano!",
-          "Tá bom demais!",
-          "Não acredito!",
-          "Sério mesmo?"
-        ],
-        answer: 1
+        options: ["Altura", "Barata", "Escuro", "Estar no mar nadando e ver uma baleia chegando perto"],
+        answer: 3
       },
       {
         question: "Qual é o esporte favorito do Jooj?",
         options: ["Futebol", "Basquete", "Vôlei", "Tênis"],
-        answer: 0
-      },
-      {
-        question: "Qual plataforma o Jooj usa mais no celular?",
-        options: ["Twitter/X", "TikTok", "Instagram", "YouTube"],
-        answer: 2
+        answer: 1
       },
       {
         question: "Qual é o sonho de viagem do Jooj?",
@@ -929,18 +926,63 @@
         answer: 0
       },
       {
-        question: "Qual é a bebida favorita do Jooj?",
-        options: ["Café", "Refrigerante", "Suco de laranja", "Água com gás"],
+        question: "Qual é o nome do primeiro personagem de RPG do Jooj?",
+        options: ["Roberto", "Gael", "Lafel", "Ergath"],
+        answer: 2
+      },
+      {
+        question: "Quais doenças o Jooj tem laudadas?",
+        options: [
+          "Tourette, Depressão, Dislexia, Borderline",
+          "Tourette, Ansiedade, TDAH, Borderline",
+          "Ansiedade, Depressão, TDAH, Dislexia",
+          "Tourette, Ansiedade, TDAH, Dislexia"
+        ],
+        answer: 3
+      },
+      {
+        question: "Qual superpoder o Jooj teria?",
+        options: ["Teleporte", "Voar", "Super força", "Supervelocidade"],
         answer: 0
       },
       {
-        question: "O que o Jooj faz primeiro quando acorda?",
+        question: "Qual é a habilidade secreta do Jooj que ninguém sabe?",
+        options: ["Equilibrar talheres na cabeça", "Dormir em qualquer lugar", "Imitar a voz da Mari", "Não sei"],
+        answer: 3
+      },
+      {
+        question: "Qual é a cor do próximo gato que o Jooj quer?",
+        options: ["Preto", "Laranja", "Frajola (Alfredo)", "Cinza"],
+        answer: 0
+      },
+      {
+        question: "Qual das opções de número o Jooj iria escolher?",
+        options: ["78", "14", "7", "64"],
+        answer: 0
+      },
+      {
+        question: "Qual é o filme favorito do Jooj?",
+        options: ["Spider-Man: No Way Home", "Um Cabra Bom de Bola", "Deu a Louca na Chapeuzinho", "A Escolha Perfeita"],
+        answer: 0
+      },
+      {
+        question: "Odeio gente falsa que na frente,...",
         options: [
-          "Olha o celular",
-          "Toma café",
-          "Vai ao banheiro",
-          "Faz alongamento"
+          "Na frente é uma coisa, com a gente por de trás fica falando da gente de falar por a frente, fala por de trás",
+          "Na frente é de um jeito, por trás já fala outra, mas jura que tá sendo sincera",
+          "Sorri pra gente, mas atrás inventa história como se fosse novela",
+          "Na frente elogia, por trás critica, e ainda acha que ninguém percebe"
         ],
+        answer: 0
+      },
+      {
+        question: "Qual é o pão favorito do Jooj?",
+        options: ["Australiano", "Frances", "Brioche", "Cará"],
+        answer: 0
+      },
+      {
+        question: "Quais são os empregos dos sonhos do Jooj?",
+        options: ["Desenvolvedor de jogos e Dublador", "Desenvolvedor de jogos e Dançarino", "Dublador e Jogador de basquete", "Dançarino e Jogador de basquete"],
         answer: 0
       }
     ];
@@ -952,7 +994,9 @@
       playerName: '',
       currentQuestion: 0,
       answers: new Array(questions.length).fill(null), // índice da opção escolhida
-      feedbackShown: false // se o feedback já foi exibido na questão atual
+      feedbackShown: false,
+      shuffledOptions: new Array(questions.length).fill(null), // armazena opções embaralhadas
+      startTime: null
     };
 
     /* ─────────────────────────────────────────────────────────────────
@@ -992,6 +1036,11 @@
       state.currentQuestion = 0;
       state.answers = new Array(questions.length).fill(null);
       state.feedbackShown = false;
+      state.startTime = Date.now();
+
+      questions.forEach((q, idx) => {
+        state.shuffledOptions[idx] = shuffleOptions(q.options);
+      });
 
       goToScreen('screen-quiz');
       renderQuestion();
@@ -1005,42 +1054,56 @@
       const q = questions[idx];
       const total = questions.length;
 
-      // Progresso
-      document.getElementById('progress-fill').style.width =
-        `${((idx + 1) / total) * 100}%`;
-      document.getElementById('question-counter').textContent =
-        `${idx + 1} / ${total}`;
-
-      // Texto da pergunta
+      // Progresso e texto
+      document.getElementById('progress-fill').style.width = `${((idx + 1) / total) * 100}%`;
+      document.getElementById('question-counter').textContent = `${idx + 1} / ${total}`;
       document.getElementById('question-text').textContent = q.question;
 
-      // Opções
       const grid = document.getElementById('options-grid');
       grid.innerHTML = '';
 
-      q.options.forEach((opt, i) => {
+      const options = state.shuffledOptions[idx];
+
+      options.forEach(({ opt, originalIdx }) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        btn.innerHTML = `<span>${opt}</span>`;
-        btn.onclick = () => selectOption(i);
+
+        // Se for a pergunta da cor favorita
+        if (q.question.includes("cor favorita")) {
+          btn.innerHTML = `<span style="
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:120px;       /* dobro da largura */
+        height:60px;       /* mesma altura */
+        margin:auto;
+        border-radius:12px;
+        background-color:${opt};
+        color:#000;
+        font-weight:700;
+        border:2px solid #FFF;
+        text-shadow:0 0 2px #FFF;
+      ">${opt}</span>`;
+        } else {
+          btn.innerHTML = `<span>${opt}</span>`;
+        }
+
+        btn.onclick = () => selectOption(idx, originalIdx);
 
         // Restaura seleção anterior
         if (state.answers[idx] !== null) {
           btn.disabled = true;
-          if (i === state.answers[idx]) {
-            btn.classList.add(i === q.answer ? 'correct' : 'incorrect');
-          } else if (i === q.answer) {
-            btn.classList.add('correct'); // mostra a certa
+          if (originalIdx === state.answers[idx]) {
+            btn.classList.add(originalIdx === q.answer ? 'correct' : 'incorrect');
+          } else if (originalIdx === q.answer) {
+            btn.classList.add('correct');
           }
         }
 
         grid.appendChild(btn);
       });
 
-      // Botão anterior
       document.getElementById('btn-prev').disabled = (idx === 0);
-
-      // Botão próxima / finalizar
       const btnNext = document.getElementById('btn-next');
       btnNext.textContent = (idx === total - 1) ? '✅ Finalizar' : 'Próxima →';
     }
@@ -1048,23 +1111,21 @@
     /* ─────────────────────────────────────────────────────────────────
        SELECIONAR OPÇÃO
     ───────────────────────────────────────────────────────────────── */
-    function selectOption(selectedIdx) {
-      const idx = state.currentQuestion;
-      const q = questions[idx];
+    function selectOption(questionIdx, selectedIdx) {
+      const q = questions[questionIdx];
 
-      // Ignora se já respondeu
-      if (state.answers[idx] !== null) return;
+      if (state.answers[questionIdx] !== null) return;
 
-      state.answers[idx] = selectedIdx;
+      state.answers[questionIdx] = selectedIdx;
 
-      // Aplica feedback visual
-      const btns = document.querySelectorAll('.option-btn');
-      btns.forEach((btn, i) => {
+      const options = state.shuffledOptions[questionIdx];
+      options.forEach(({ originalIdx }, i) => {
+        const btn = document.querySelectorAll('.option-btn')[i];
         btn.disabled = true;
-        if (i === selectedIdx) {
+        if (originalIdx === selectedIdx) {
           btn.classList.add(selectedIdx === q.answer ? 'correct' : 'incorrect');
-        } else if (i === q.answer) {
-          btn.classList.add('correct'); // revela a correta
+        } else if (originalIdx === q.answer) {
+          btn.classList.add('correct'); // mostra a correta
         }
       });
     }
@@ -1106,13 +1167,13 @@
     ───────────────────────────────────────────────────────────────── */
     async function finishQuiz() {
       // Calcula pontuação
-      const score = state.answers.reduce((acc, ans, i) =>
-        acc + (ans === questions[i].answer ? 1 : 0), 0
-      );
+      const score = state.answers.reduce((acc, ans, i) => acc + (ans === questions[i].answer ? 1 : 0), 0);
+
+      const duration = Date.now() - state.startTime; // tempo total em ms
 
       // Salva no banco
       try {
-        await saveScore(state.playerName, score);
+        await saveScore(state.playerName, score, duration);
       } catch (e) {
         console.error('[Quiz] Erro ao salvar pontuação:', e);
       }
@@ -1134,7 +1195,7 @@
       const pct = score / total;
 
       if (pct <= 0.33) {
-        return `Hmm... ${score} ponto(s)? Parece que você conhece o Jooj menos do que o vizinho dele! 😅 Tenta de novo e estuda mais!`;
+        return `Hmm... ${score} ponto(s)? Parece que você conhece o Jooj menos do que o vizinho dele! 😅 Estude mais!`;
       } else if (pct <= 0.60) {
         return `${score} pontos! Você conhece o Jooj razoavelmente bem, mas ainda tem muito a descobrir. Quase lá! 🤔`;
       } else if (pct <= 0.86) {
@@ -1165,11 +1226,18 @@
           li.className = `ranking-item${i === 0 ? ' first-place' : ''}`;
 
           const pos = i === 0 ? '👑' : `#${i + 1}`;
+
+          // Calcula tempo de resposta em minutos e segundos
+          const minutes = Math.floor(entry.timestamp / 60000);
+          const seconds = Math.floor((entry.timestamp % 60000) / 1000);
+          const timeStr = `${minutes}m ${seconds}s`;
+
           li.innerHTML = `
-          <span class="rank-pos">${pos}</span>
-          <span class="rank-name">${escapeHTML(entry.name)}</span>
-          <span class="rank-score">${entry.score} / ${questions.length}</span>
-        `;
+        <span class="rank-pos">${pos}</span>
+        <span class="rank-name">${escapeHTML(entry.name)}</span>
+        <span class="rank-score">${entry.score} / ${questions.length}</span>
+        <span class="rank-time" style="color:#999;font-size:0.85rem;margin-left:8px;">${timeStr}</span>
+      `;
           list.appendChild(li);
         });
       } catch (e) {
@@ -1214,6 +1282,16 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    }
+
+    /** Embaralha um array e retorna um novo array com índices originais */
+    function shuffleOptions(options) {
+      const arr = options.map((opt, i) => ({ opt, originalIdx: i }));
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
     }
 
   </script>
