@@ -321,6 +321,11 @@ const questions = [
     options: ["Todas as opções", "Café", "Pepsi", "Monster Branco"],
     answer: 0,
   },
+  {
+    question: "Quem das opções abaixo Jooj chamaria para um churrasco?",
+    options: ["Pericles", "Bob Esponja", "Romero Brito", "Sasuke Uchiha"],
+    answer: 0,
+  },
 ];
 
 /* ─────────────────────────────────────────────────────────────────
