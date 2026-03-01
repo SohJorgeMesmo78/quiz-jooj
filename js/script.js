@@ -341,6 +341,10 @@ function startQuiz() {
   // Reseta estado
   state.playerName = name;
   state.currentQuestion = 0;
+
+  // Embaralhar as perguntas
+  shuffleArray(questions);
+
   state.answers = new Array(questions.length).fill(null);
   state.feedbackShown = false;
   state.startTime = Date.now();
@@ -600,6 +604,15 @@ function escapeHTML(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Embaralha o array de perguntas (in-place) */
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
 /** Embaralha um array e retorna um novo array com índices originais */
