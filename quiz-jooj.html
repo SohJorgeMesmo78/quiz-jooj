@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/x-icon" href="jooj.ico">
   <title>Quem Conhece Melhor o Jooj?</title>
 
   <!-- ═══════════════════════════════════════════════════════════════
@@ -606,6 +607,12 @@
     #toast.show {
       transform: translateX(-50%) translateY(0);
     }
+    .quiz-img {
+  display: block;
+  margin: 16px auto;
+  max-width: 180px;
+  border-radius: 12px;
+}
 
     /* ── Responsividade ── */
     @media (max-width: 480px) {
@@ -629,7 +636,7 @@
     <!-- ── 1. TELA INICIAL ── -->
     <section id="screen-home" class="screen active">
       <div class="card">
-        <span class="emoji-crown">👑</span>
+        <span class="emoji-crown"><img src="jooj.png" alt="Jooj" class="quiz-img"></span>
         <h1>Quem Conhece Melhor o Jooj?</h1>
         <p class="subtitle">
           Chegou a hora da verdade! Prove que você é o maior especialista em Jooj
@@ -701,6 +708,8 @@
     <section id="screen-result" class="screen">
       <div class="card">
         <p class="result-player">Resultado de <strong id="result-name">—</strong></p>
+        <img id="result-img" src="jooj.png" alt="Imagem do resultado"
+          style="display:block;margin:16px auto;max-width:180px;">
         <div class="result-score" id="result-score">0 / 15</div>
         <div class="result-message" id="result-message">—</div>
 
@@ -877,7 +886,7 @@
       },
       {
         question: "Qual o dia do aniversário do Jooj?",
-        options: ["03", "02", "05", "04"],
+        options: ["03/03", "02/03", "28/02", "04/03"],
         answer: 0
       },
       {
@@ -1183,6 +1192,7 @@
       document.getElementById('result-score').textContent = `${score} / ${questions.length}`;
       document.getElementById('result-message').textContent = getResultMessage(score);
 
+      updateResultImage(score);
       goToScreen('screen-result');
       renderRankingInto('result-ranking-list');
     }
@@ -1292,6 +1302,20 @@
         [arr[i], arr[j]] = [arr[j], arr[i]];
       }
       return arr;
+    }
+
+    function updateResultImage(score) {
+      const img = document.getElementById('result-img');
+
+      if (score <= 5) {
+        img.src = '03.png';
+      } else if (score <= 10) {
+        img.src = '06.png';
+      } else if (score <= 15) {
+        img.src = '08.png';
+      } else {
+        img.src = '10.png';
+      }
     }
 
   </script>
