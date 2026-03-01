@@ -257,7 +257,7 @@ const questions = [
   },
   {
     question: "Qual é o pão favorito do Jooj?",
-    options: ["Australiano", "Frances", "Brioche", "Cará"],
+    options: ["Australiano", "Frances", "Cará", "Todas as opções"],
     answer: 0,
   },
   {
@@ -272,22 +272,53 @@ const questions = [
   },
   {
     question: "Qual vai ser o nome da minha primeira filha? (Humana)",
-    options: [
-      "Rafaela",
-      "Melissa",
-      "Yasmin",
-      "Ster",
-    ],
+    options: ["Rafaela", "Melissa", "Yasmin", "Ster"],
     answer: 0,
   },
   {
     question: "Qual o nome da minha moto?",
+    options: ["Rafaela", "Melissa", "Yasmin", "Ster"],
+    answer: 0,
+  },
+  {
+    question: "Qual o nome completo do Nico?",
     options: [
-      "Rafaela",
-      "Melissa",
-      "Yasmin",
-      "Ster",
+      "Henrique Nicodemus José das Arruelas",
+      "Nicolas Bisneto",
+      "Nicholas Vincent Inácio",
+      "Nico",
     ],
+    answer: 0,
+  },
+  {
+    question: "Qual o nome completo da Liz?",
+    options: [
+      "Catharina Elizabeth Sétima Oitava",
+      "Eliza Maria Alves Pereira",
+      "Marina Paula Soares Segunda",
+      "Liz",
+    ],
+    answer: 0,
+  },
+  {
+    question: "Versiculo favorito da Bíblia",
+    options: [
+      "Mateus 28:9 - 'E eis que Jesus veio ao encontro delas e disse: Salve!...'",
+      "João 7:53 - 'E todos foram embora para suas casas.'",
+      "João 11:35 - 'Jesus chorou.'",
+      "Eclesiastes 3:12 - 'Descobri que não há nada melhor para o homem do que ser feliz e praticar o bem enquanto vive.'",
+    ],
+    answer: 0,
+  },
+  {
+    question:
+      "Quantos livro o Jooj já leu? (por livre e espontânea vontade (sem ser os 66 da bíblia))",
+    options: ["1", "16", "4", "2.5"],
+    answer: 0,
+  },
+  {
+    question: "Qual a bebida favorita do Jooj?",
+    options: ["Todas as opções", "Café", "Pepsi", "Monster Branco"],
     answer: 0,
   },
 ];
